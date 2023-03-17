@@ -1,14 +1,13 @@
-import { Client, GatewayIntentBits } from 'discord.js';
-import { BOT_TOKEN } from '../config';
-import { messageToSpoiler } from './functions/spoiler';
-import { GuildModel, init, mongoConnect, update } from './utils/mongodb';
-import { callChatGPT, callImageGPT } from './functions/openai';
+import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
 
-const COMMANDS = {
-  '!spoiler': 'spoiler',
-  '!chat': 'chat',
-  '!img': 'img',
-};
+import { Client, GatewayIntentBits } from 'discord.js';
+import { messageToSpoiler } from './functions/spoiler';
+import { init, mongoConnect, update } from './utils/mongodb';
+import { callChatGPT, callImageGPT } from './functions/openai';
+import * as process from 'process';
+
+const { BOT_TOKEN = '' } = process.env;
 
 export const client = new Client({
   intents: [
