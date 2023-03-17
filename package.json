@@ -1,7 +1,7 @@
 {
   "name": "bot-discord",
   "version": "1.0.0",
-  "main": "bot.ts",
+  "main": "src/bot.ts",
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^0.4.1",
