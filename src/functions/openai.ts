@@ -1,7 +1,9 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { OPENAI_API_KEY } from '../../config';
 import { Message, MessageCreateOptions } from 'discord.js';
 import { splitString } from '../utils/tools';
+import * as process from 'process';
+
+const { OPENAI_API_KEY = '' } = process.env;
 
 const configuration = new Configuration({
   apiKey: OPENAI_API_KEY,

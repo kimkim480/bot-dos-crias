@@ -1,5 +1,7 @@
-import mongoose, { HydratedDocument, Model } from 'mongoose';
-import { MONGODB } from '../../config';
+import mongoose from 'mongoose';
+import * as process from 'process';
+
+const { MONGODB_URI = '' } = process.env;
 
 type Guild = {
   _id?: string;
@@ -7,27 +9,24 @@ type Guild = {
   gptChannelId?: string;
   spoilerChannelId?: string;
   imageChannelId?: string;
-}
-
-type GuildDocument = HydratedDocument<Guild>;
+};
 
 const schema = new mongoose.Schema({
   guildId: { type: String, required: true },
   gptChannelId: { type: String },
   spoilerChannelId: { type: String },
-  imageChannelId: { type: String }
+  imageChannelId: { type: String },
 });
 
-export const GuildModel = mongoose.model("Guild", schema);
+export const GuildModel = mongoose.model('Guild', schema);
 export async function mongoConnect() {
   try {
-    await mongoose.connect(MONGODB.URI);
-    console.log('DB is connected!')
-  } catch(error){
-    console.log(error)
+    await mongoose.connect(MONGODB_URI);
+    console.log('DB is connected!');
+  } catch (error) {
+    console.log(error);
   }
 }
-
 
 export async function create(data: Guild) {
   const guild = new GuildModel(data);
@@ -35,8 +34,13 @@ export async function create(data: Guild) {
   return guild.save();
 }
 
-export async function update(id: string, data: Partial<Omit<Guild, '_id' | 'guildId'>>) {
-  return GuildModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
+export async function update(
+  id: string,
+  data: Partial<Omit<Guild, '_id' | 'guildId'>>
+) {
+  return GuildModel.findByIdAndUpdate(id, data, {
+    returnDocument: 'after',
+  }).exec();
 }
 
 export async function findOne(guildId: string) {
@@ -46,7 +50,7 @@ export async function findOne(guildId: string) {
 export async function init(guildId: string) {
   let guild = await findOne(guildId);
 
-  if(!guild) {
+  if (!guild) {
     guild = await create({ guildId });
   }
 
