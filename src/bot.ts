@@ -1,87 +1,85 @@
-import { Player } from "discord-player";
-import { Client, Intents } from "discord.js";
-import { BOT_TOKEN } from "../config";
-import { execute, listQueue, skip, stop } from "./functions/playSong";
-import { getLinkUrl } from "./utils/youtube";
+import { Client, GatewayIntentBits } from 'discord.js';
+import { BOT_TOKEN } from '../config';
+import { messageToSpoiler } from './functions/spoiler';
+import { GuildModel, init, mongoConnect, update } from './utils/mongodb';
+import { callChatGPT, callImageGPT } from './functions/openai';
 
-export const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES] });
+export const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 
-client.once('ready', () => {
+client.once('ready', async () => {
+  await mongoConnect();
   console.log('Bot is ready!');
 });
 
 client.on('messageCreate', async message => {
-  if (message.author.bot) return;
-
-  const { content, guild } = message;
-
-  if (!content.startsWith("!iure")) return;
+  const { author, channel, content, guildId } = message;
+  if (author.bot || !guildId) return;
+  let clientGuild = await init(guildId);
 
   const command = content.split(" ");
 
-  if (command[1] === 'stackoverflow') {
-    const search = command.splice(2, command.length).join(" ");
-    const link = await getLinkUrl(search);
-    await message.reply(link);
+  if(content.startsWith("!spoiler")) {
+    if (command[1] === 'start') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { spoilerChannelId: channel.id })
+    }
+
+    if(command[1] === 'stop') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { spoilerChannelId: '' })
+    }
+
+    return;
   }
 
-  if (command[1] === 'toca') {
-    await execute(message);
+  if(content.startsWith("!chat")) {
+    if (command[1] === 'start') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { gptChannelId: channel.id })
+    }
+
+    if(command[1] === 'stop') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { gptChannelId: '' })
+    }
+
+    return;
   }
 
-  if (command[1] === 'para') {
-    await stop(message, player);
+  if(content.startsWith("!img")) {
+    if (command[1] === 'start') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { imageChannelId: channel.id })
+    }
+
+    if(command[1] === 'stop') {
+      // @ts-ignore
+      clientGuild = await update(clientGuild.id, { imageChannelId: '' })
+    }
+
+    return;
   }
 
-  if (command[1] === 'lista') {
-    await listQueue(message, player.getQueue(guild!.id));
+  if(channel.id === clientGuild.spoilerChannelId) {
+    await messageToSpoiler(message);
   }
 
-  if (command[1] === 'proxima') {
-    await skip(message, player);
+  if(channel.id === clientGuild.gptChannelId) {
+    await callChatGPT(message);
   }
 
+  if(channel.id === clientGuild.imageChannelId) {
+    await callImageGPT(message);
+  }
+
+  return;
 });
 
 client.login(BOT_TOKEN);
 
-export const player = new Player(client);
-
-player.on("connectionCreate", async (queue, connection) => {
-  if (!queue.metadata) return console.log("Not metadata");
-  queue.metadata.channel.send("Cheguei mané!");
-});
-
-player.on("channelEmpty", async (queue) => {
-  return queue.connection.disconnect()
-});
-
-player.on("trackStart", async (queue, track) => {
-  if (!queue.metadata) return console.log("Not metadata");
-  queue.metadata.channel.send({
-    embeds: [
-      {
-        author: {
-          name: track.requestedBy.username + " - tô tocano",
-          icon_url: track.requestedBy.displayAvatarURL(),
-        },
-        description: `[${track.title}](${track.url}) - [Duração: **${track.duration}**]`,
-        color: 0x00ff00,
-      },
-    ],
-  }).then(m => setTimeout(() => m.delete(), track.durationMS))
-});
-
-player.on("trackAdd", async (queue, track) => {
-  if (!queue.metadata) return console.log("Not metadata");
-  if (queue.tracks.length >= 1) {
-    queue.metadata.channel.send({
-      embeds: [
-        {
-          description: `Adicionado **[${track.title}](${track.url})** - [Duração: **${track.duration}**]`,
-          color: 0x00aaff,
-        },
-      ],
-    });
-  }
-});
