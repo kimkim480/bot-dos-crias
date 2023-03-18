@@ -1,11 +1,12 @@
-import * as dotenv from 'dotenv'; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { Client, GatewayIntentBits } from 'discord.js';
-import { messageToSpoiler } from './functions/spoiler';
-import { init, mongoConnect, update } from './utils/mongodb';
-import { callChatGPT, callImageGPT } from './functions/openai';
+import { init, mongoConnect } from './utils/mongodb';
 import * as process from 'process';
+import { commands } from './commands';
+import { createChannelHandlers } from './handlers';
+import { GuildDocument } from './types';
 
 const { BOT_TOKEN = '' } = process.env;
 
@@ -27,56 +28,25 @@ client.on('messageCreate', async message => {
   if (author.bot || !guildId) return;
   const clientGuild = await init(guildId);
 
-  const command = content.split(' ');
+  const [cmd, args] = content.split(' ');
 
-  switch (command[0]) {
-    case '!spoiler':
-      if (command[1] === 'start') {
-        await update(clientGuild.id, {
-          spoilerChannelId: channel.id,
-        });
-      }
+  const commandName = cmd;
+  const subCommand = args;
 
-      if (command[1] === 'stop') {
-        await update(clientGuild.id, { spoilerChannelId: '' });
-      }
-      return;
-    case '!chat':
-      if (command[1] === 'start') {
-        await update(clientGuild.id, { gptChannelId: channel.id });
-      }
+  const command = commands[commandName];
 
-      if (command[1] === 'stop') {
-        await update(clientGuild.id, { gptChannelId: '' });
-      }
-      return;
-    case '!img':
-      if (command[1] === 'start') {
-        await update(clientGuild.id, {
-          imageChannelId: channel.id,
-        });
-      }
-
-      if (command[1] === 'stop') {
-        await update(clientGuild.id, { imageChannelId: '' });
-      }
-      return;
-    default:
-      break;
+  if (command) {
+    const channelId = subCommand === 'start' ? channel.id : '';
+    await command.execute(clientGuild.id, channelId);
+    return;
   }
 
-  switch (channel.id) {
-    case clientGuild.spoilerChannelId:
-      await messageToSpoiler(message);
-      break;
-    case clientGuild.gptChannelId:
-      await callChatGPT(message);
-      break;
-    case clientGuild.imageChannelId:
-      await callImageGPT(message);
-      break;
-    default:
-      break;
+  const channelHandler = createChannelHandlers(
+    clientGuild as Required<GuildDocument>
+  )[channel.id];
+
+  if (channelHandler) {
+    await channelHandler.handle(message);
   }
 
   return;
