@@ -16,8 +16,8 @@ You can follow this guide to learn how to create a bot and add it to your server
 # Usage
 To use the bot, simply type a command in a text channel where the bot is present. Here are some example commands:
 
-`!gpt start/stop`: The bot will be added/removed to the channel.
- After `!gpt start` the bot will respond to all messages in the channel, but it won't memorize the previous prompt.
+`!chat start/stop`: The bot will be added/removed to the channel.
+ After `!chat start` the bot will respond to all messages in the channel, but it won't memorize the previous prompt.
 
 `!img start/stop`: The bot will be added/removed to the channel.
  After `!img start` the bot will respond to all messages in the channel trying to generate an image using the BETA DALL-E model

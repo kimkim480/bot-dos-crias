@@ -37,7 +37,9 @@ export async function callChatGPT(message: Message) {
   } catch (error: any) {
     if (error.response) {
       await message.channel.send({
-        content: `${error.response.status} - ${error.response.data}`,
+        content: `${error.response.status} - ${JSON.stringify(
+          error.response.data
+        )}`,
       });
     } else {
       console.log(error.message);
@@ -65,7 +67,9 @@ export async function callImageGPT(message: Message) {
   } catch (error: any) {
     if (error.response) {
       await message.channel.send({
-        content: `${error.response.status} - ${error.response.data}`,
+        content: `${error.response.status} - ${JSON.stringify(
+          error.response.data
+        )}`,
       });
     } else {
       console.log(error.message);

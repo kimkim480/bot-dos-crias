@@ -1,15 +1,8 @@
 import mongoose from 'mongoose';
 import * as process from 'process';
+import { Guild } from '../types';
 
 const { MONGODB_URI = '' } = process.env;
-
-type Guild = {
-  _id?: string;
-  guildId: string;
-  gptChannelId?: string;
-  spoilerChannelId?: string;
-  imageChannelId?: string;
-};
 
 const schema = new mongoose.Schema({
   guildId: { type: String, required: true },
@@ -18,7 +11,7 @@ const schema = new mongoose.Schema({
   imageChannelId: { type: String },
 });
 
-export const GuildModel = mongoose.model('Guild', schema);
+export const GuildModel = mongoose.model<Guild>('Guild', schema);
 export async function mongoConnect() {
   try {
     await mongoose.connect(MONGODB_URI);
