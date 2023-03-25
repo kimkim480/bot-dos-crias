@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import * as process from 'process';
 import { Guild } from '../types';
+import { logger } from './tools';
 
 const { MONGODB_URI = '' } = process.env;
 
@@ -15,7 +16,7 @@ export const GuildModel = mongoose.model<Guild>('Guild', schema);
 export async function mongoConnect() {
   try {
     await mongoose.connect(MONGODB_URI);
-    console.log('DB is connected!');
+    logger(`DB is connected!`);
   } catch (error) {
     console.log(error);
   }
@@ -27,10 +28,7 @@ export async function create(data: Guild) {
   return guild.save();
 }
 
-export async function update(
-  id: string,
-  data: Partial<Omit<Guild, '_id' | 'guildId'>>
-) {
+export async function update(id: string, data: Partial<Omit<Guild, '_id' | 'guildId'>>) {
   return GuildModel.findByIdAndUpdate(id, data, {
     returnDocument: 'after',
   }).exec();
