@@ -2,6 +2,7 @@ export function splitString(str: string) {
   return str.match(/(.|[\r\n]){1,2000}/g) as string[];
 }
 
+
 export function logger(message?: string | Record<string, any>) {
   const date = new Date();
 
