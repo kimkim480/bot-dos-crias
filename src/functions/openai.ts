@@ -1,6 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { Message, MessageCreateOptions } from 'discord.js';
-import { splitString } from '../utils/tools';
+import { logger, splitString } from '../utils/tools';
 import * as process from 'process';
 
 const { OPENAI_API_KEY = '' } = process.env;
@@ -11,11 +11,13 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 export async function callChatGPT(message: Message) {
+  await message.channel.sendTyping();
   await message.channel.send({
-    content: 'Aguarde enquanto o GPT processa a sua resposta',
+    content: 'Bot dos Crias está processando sua mensagem',
   });
 
   try {
+    await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: message.content }],
@@ -23,11 +25,12 @@ export async function callChatGPT(message: Message) {
 
     const content = completion.data.choices[0].message?.content;
 
-    console.log({ len: content?.length });
+    logger({ len: content?.length });
 
     const contentArray = splitString(content || '');
 
     for (const string of contentArray) {
+      await message.channel.sendTyping();
       await message.channel.send({
         content: string,
       });
@@ -37,12 +40,10 @@ export async function callChatGPT(message: Message) {
   } catch (error: any) {
     if (error.response) {
       await message.channel.send({
-        content: `${error.response.status} - ${JSON.stringify(
-          error.response.data
-        )}`,
+        content: `${error.response.status} - ${JSON.stringify(error.response.data)}`,
       });
     } else {
-      console.log(error.message);
+      logger(error.message);
     }
   }
 }
@@ -67,12 +68,10 @@ export async function callImageGPT(message: Message) {
   } catch (error: any) {
     if (error.response) {
       await message.channel.send({
-        content: `${error.response.status} - ${JSON.stringify(
-          error.response.data
-        )}`,
+        content: `${error.response.status} - ${JSON.stringify(error.response.data)}`,
       });
     } else {
-      console.log(error.message);
+      logger(error.message);
     }
   }
 }

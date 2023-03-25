@@ -7,20 +7,17 @@ import * as process from 'process';
 import { commands } from './commands';
 import { createChannelHandlers } from './handlers';
 import { GuildDocument } from './types';
+import { logger } from './utils/tools';
 
 const { BOT_TOKEN = '' } = process.env;
 
 export const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
 client.once('ready', async () => {
   await mongoConnect();
-  console.log('Bot is ready!');
+  logger(`Bot is ready!`);
 });
 
 client.on('messageCreate', async message => {
@@ -41,9 +38,7 @@ client.on('messageCreate', async message => {
     return;
   }
 
-  const channelHandler = createChannelHandlers(
-    clientGuild as Required<GuildDocument>
-  )[channel.id];
+  const channelHandler = createChannelHandlers(clientGuild as Required<GuildDocument>)[channel.id];
 
   if (channelHandler) {
     await channelHandler.handle(message);
