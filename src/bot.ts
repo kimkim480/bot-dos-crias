@@ -35,6 +35,7 @@ client.on('messageCreate', async message => {
   if (command) {
     const channelId = subCommand === 'start' ? channel.id : '';
     await command.execute(clientGuild.id, channelId);
+    logger({ command });
     return;
   }
 
