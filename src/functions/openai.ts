@@ -27,7 +27,12 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     });
 
     const content = completion.data.choices[0].message?.content;
+    const billing = isGPT3
+      ? ((completion.data.usage?.total_tokens || 0) * 0.002) / 1000
+      : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) /
+        1000;
 
+    logger({ usage: completion.data.usage, billing });
     logger({ len: content?.length });
 
     const contentArray = splitString(content || '');
