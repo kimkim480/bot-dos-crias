@@ -10,16 +10,19 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
-export async function callChatGPT(message: Message) {
+export async function callChatGPT(message: Message, isGPT3: boolean) {
   await message.channel.sendTyping();
   await message.channel.send({
     content: 'Bot dos Crias está processando sua mensagem',
   });
 
   try {
+    const model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
+    logger({ model });
+
     await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+      model,
       messages: [{ role: 'user', content: message.content }],
     });
 
@@ -47,7 +50,6 @@ export async function callChatGPT(message: Message) {
     }
   }
 }
-
 export async function callImageGPT(message: Message) {
   await message.channel.send({
     content: 'Aguarde enquanto o GPT processa a sua imagem',
