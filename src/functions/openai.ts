@@ -18,18 +18,22 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
 
   try {
     const model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
+    const max_tokens = isGPT3 ? 1500 : 1000;
+
     logger({ model });
 
     await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
       model,
+      max_tokens,
       messages: [{ role: 'user', content: message.content }],
     });
 
     const content = completion.data.choices[0].message?.content;
     const billing = isGPT3
-      ? (completion.data.usage?.total_tokens || 0) * 0.002 / 1000
-      : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) / 1000;
+      ? ((completion.data.usage?.total_tokens || 0) * 0.002) / 1000
+      : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) /
+        1000;
 
     logger({ usage: completion.data.usage, billing });
     logger({ len: content?.length });
