@@ -20,13 +20,23 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     const model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
     const max_tokens = isGPT3 ? 1500 : 1000;
 
+    const system_prompt = `You are an assistant made for the purpose of helping user with code.
+    You can answer about any subject that the user asks, but your mainly goal is answer about code/programming.
+    
+    - Always give an explanation and example of what is being asked.
+    - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`
+    `;
+
     logger({ model });
 
     await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
       model,
       max_tokens,
-      messages: [{ role: 'user', content: message.content }],
+      messages: [
+        { role: 'system', content: system_prompt },
+        { role: 'user', content: message.content },
+      ],
     });
 
     const content = completion.data.choices[0].message?.content;
