@@ -18,7 +18,7 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
 
   try {
     const model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
-    const max_tokens = isGPT3 ? 1500 : 1000;
+    const max_tokens = isGPT3 ? 3000 : 1000;
 
     const system_prompt = `You are an assistant made for the purpose of helping user with code.
     You can answer about any subject that the user asks, but your mainly goal is answer about code/programming.
