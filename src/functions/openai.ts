@@ -1,7 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { Message, MessageCreateOptions } from 'discord.js';
 import { logger, splitString } from '../utils/tools';
-import * as process from 'process';
 
 const { OPENAI_API_KEY = '' } = process.env;
 
@@ -46,14 +45,13 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
         1000;
 
     logger({ usage: completion.data.usage, billing });
-    logger({ len: content?.length });
 
     const contentArray = splitString(content || '');
 
-    for (const string of contentArray) {
+    for (const item of contentArray) {
       await message.channel.sendTyping();
       await message.channel.send({
-        content: string,
+        content: item,
       });
     }
 
