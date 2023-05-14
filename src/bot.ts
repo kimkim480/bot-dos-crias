@@ -25,6 +25,17 @@ client.on('messageCreate', async message => {
   if (author.bot || !guildId) return;
   const clientGuild = await init(guildId);
 
+  if (clientGuild.id !== '979197812631810079') {
+    await message.channel.sendTyping();
+    await message.channel.send({
+      content: '⚠️ Esse bot está desativado temporariamente devido a condições financeiras do seu criador ⚠️',
+    });
+    await message.channel.send({
+      content: '⚠️ Considere fazer uma doação ao seu criador ⚠️',
+    });
+    return;
+  }
+
   const [cmd, args] = content.split(' ');
 
   const commandName = cmd;
@@ -35,7 +46,6 @@ client.on('messageCreate', async message => {
   if (command) {
     const channelId = subCommand === 'start' ? channel.id : '';
     await command.execute(clientGuild.id, channelId);
-    logger({ command });
     return;
   }
 
