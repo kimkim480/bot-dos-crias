@@ -10,6 +10,18 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 export async function callChatGPT(message: Message, isGPT3: boolean) {
+  // just for fun
+  if (message.guildId !== '979197812631810079') {
+    await message.channel.sendTyping();
+    await message.channel.send({
+      content: '⚠️ Esse bot está desativado temporariamente devido a condições financeiras do seu criador ⚠️',
+    });
+    await message.channel.send({
+      content: '⚠️ Considere fazer uma doação ao seu criador ⚠️',
+    });
+    return;
+  }
+
   await message.channel.sendTyping();
   await message.channel.send({
     content: 'Bot dos Crias está processando sua mensagem',
