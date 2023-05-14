@@ -17,7 +17,7 @@ export const client = new Client({
 
 client.once('ready', async () => {
   await mongoConnect();
-  logger(`Bot is ready!`);
+  await logger(`Bot is ready!`);
 });
 
 client.on('messageCreate', async message => {

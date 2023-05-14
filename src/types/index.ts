@@ -18,3 +18,9 @@ export interface Command {
 export interface ChannelHandler {
   handle(message: Message): Promise<void>;
 }
+
+export interface loggerOptions {
+  color?: number;
+  footer?: string;
+  title?: string;
+}

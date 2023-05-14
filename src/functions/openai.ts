@@ -10,18 +10,6 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 export async function callChatGPT(message: Message, isGPT3: boolean) {
-  // just for fun
-  if (message.guildId !== '979197812631810079') {
-    await message.channel.sendTyping();
-    await message.channel.send({
-      content: '⚠️ Esse bot está desativado temporariamente devido a condições financeiras do seu criador ⚠️',
-    });
-    await message.channel.send({
-      content: '⚠️ Considere fazer uma doação ao seu criador ⚠️',
-    });
-    return;
-  }
-
   await message.channel.sendTyping();
   await message.channel.send({
     content: 'Bot dos Crias está processando sua mensagem',
@@ -37,8 +25,6 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     - Always give an explanation and example of what is being asked.
     - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`
     `;
-
-    logger({ model });
 
     await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
@@ -56,7 +42,13 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
       : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) /
         1000;
 
-    logger({ usage: completion.data.usage, billing });
+    await logger(
+      `Model: \n${model}\n\n Max_tokens: \n${completion.data.usage?.total_tokens}\n\n Billing: \n${billing}\n\n`,
+      {
+        title: 'Billing',
+        color: 0x1f8b4c,
+      }
+    );
 
     const contentArray = splitString(content || '');
 
@@ -74,7 +66,7 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
         content: `${error.response.status} - ${JSON.stringify(error.response.data)}`,
       });
     } else {
-      logger(error.message);
+      await logger(error.message, { title: 'Error', color: 0x992d22 });
     }
   }
 }
@@ -101,7 +93,7 @@ export async function callImageGPT(message: Message) {
         content: `${error.response.status} - ${JSON.stringify(error.response.data)}`,
       });
     } else {
-      logger(error.message);
+      await logger(error.message, { title: 'Error', color: 0x992d22 });
     }
   }
 }

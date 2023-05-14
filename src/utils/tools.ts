@@ -1,8 +1,16 @@
+import { WebhookClient } from 'discord.js';
+import { loggerOptions } from '../types';
+
+const { DISCORD_LOG_CHANNEL_WEBHOOK = '' } = process.env;
+
 export function splitString(str: string) {
   return str.match(/(.|[\r\n]){1,2000}/g) as string[];
 }
 
-export function logger(message?: string | Record<string, any>) {
+export async function logger(message: string, options?: loggerOptions) {
+  const webHook = new WebhookClient({ url: DISCORD_LOG_CHANNEL_WEBHOOK });
+  const { footer, title, color } = options || {};
+
   const date = new Date();
 
   const formatter = new Intl.DateTimeFormat('pt-BR', {
@@ -15,5 +23,14 @@ export function logger(message?: string | Record<string, any>) {
     year: 'numeric',
   });
 
-  return console.log(`[${formatter.format(date)}] `, message);
+  return webHook.send({
+    embeds: [
+      {
+        color: color || 0x206694,
+        description: `**${message}**`,
+        footer: footer ? { text: footer } : undefined,
+        title: title || `[${formatter.format(date)}]`,
+      },
+    ],
+  });
 }
