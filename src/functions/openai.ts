@@ -24,6 +24,7 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     
     - Always give an explanation and example of what is being asked.
     - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`
+    - If necessary use Discord Text Formatting to make your message more clear and comprehensive
     `;
 
     await message.channel.sendTyping();
