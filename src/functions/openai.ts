@@ -1,6 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { Message, MessageCreateOptions } from 'discord.js';
-import { logger, splitString } from '../utils/tools';
+import { AttachmentBuilder, Message, MessageCreateOptions } from 'discord.js';
+import { getAnexo, logger, splitString } from '../utils/tools';
 
 const { OPENAI_API_KEY = '' } = process.env;
 
@@ -20,20 +20,39 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     const max_tokens = isGPT3 ? 3000 : 1000;
     const temperature = 0.2;
 
-    const system_prompt = `You are an assistant made for the purpose of helping user with code.
+    const system_prompt = `
+    You are an assistant made for the purpose of helping user with code.
     You can answer about any subject that the user asks, but your mainly goal is answer about code/programming.
     
     - Always give an explanation and example of what is being asked.
-    - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`
-    - If necessary use Discord Text Formatting to make your message more clear and comprehensive
+    - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`.
+    - If necessary use Discord Text Formatting to make your message more clear and comprehensive.
+    - If you've been asked to convert/format or do some data transformation DO IT! Don't show any code, but the result!!
     `;
+
+    const attachment = message.attachments.first();
+    let attachmentContent = '';
+
+    if (attachment) {
+      const { url, contentType } = attachment;
+
+      if (!contentType?.includes('text/plain')) {
+        await message.channel.send({
+          content: 'No momento só tenho suporte para arquivos txt',
+        });
+
+        return;
+      }
+
+      attachmentContent = await getAnexo(url);
+    }
 
     await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
       max_tokens,
       messages: [
         { role: 'system', content: system_prompt },
-        { role: 'user', content: message.content },
+        { role: 'user', content: `${message.content}\n${attachmentContent}` },
       ],
       model,
       temperature,
@@ -53,21 +72,40 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
       }
     );
 
+    const match = message.content.match(/--save=([^ ]+)/);
+    let file;
+
+    if (match) {
+      const value = match[1];
+      file = new AttachmentBuilder(Buffer.from(content || ''), { name: `message.${value}` });
+    }
+
     const contentArray = splitString(content || '');
 
+    let lastMassage;
     for (const item of contentArray) {
       await message.channel.sendTyping();
-      await message.channel.send({
+      lastMassage = await message.reply({
         content: item,
       });
+    }
+
+    if (lastMassage) {
+      file && lastMassage.edit({ files: [file] });
     }
 
     return;
   } catch (error: any) {
     if (error.response) {
-      await message.channel.send({
-        content: `${error.response.status} - ${JSON.stringify(error.response.data)}`,
-      });
+      if (error.response.data.error?.code?.includes('context_length_exceeded')) {
+        await message.channel.send({
+          content: 'O tamanho da mensagem está acima do suportado pelo GPT-3.5',
+        });
+      } else {
+        await message.channel.send({
+          content: `${error.response.status} - ${error.response.data.error?.message}`,
+        });
+      }
     } else {
       await logger(error.message, { title: 'Error', color: 0x992d22 });
     }

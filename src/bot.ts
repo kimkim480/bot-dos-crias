@@ -3,7 +3,6 @@ dotenv.config();
 
 import { Client, GatewayIntentBits } from 'discord.js';
 import { init, mongoConnect } from './utils/mongodb';
-import * as process from 'process';
 import { commands } from './commands';
 import { createChannelHandlers } from './handlers';
 import { GuildDocument } from './types';
@@ -12,7 +11,12 @@ import { logger } from './utils/tools';
 const { BOT_TOKEN = '' } = process.env;
 
 export const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
 });
 
 client.once('ready', async () => {

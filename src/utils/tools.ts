@@ -1,5 +1,6 @@
 import { WebhookClient } from 'discord.js';
 import { loggerOptions } from '../types';
+import axios from 'axios';
 
 const { DISCORD_LOG_CHANNEL_WEBHOOK = '' } = process.env;
 
@@ -33,4 +34,13 @@ export async function logger(message: string, options?: loggerOptions) {
       },
     ],
   });
+}
+
+export async function getAnexo(url: string) {
+  const { data } = await axios<string>({
+    method: 'get',
+    url: url,
+  });
+
+  return data;
 }

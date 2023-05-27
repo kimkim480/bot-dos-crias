@@ -6,7 +6,6 @@ export type Guild = {
   guildId: string;
   gptChannelId?: string;
   gpt4ChannelId?: string;
-  spoilerChannelId?: string;
   imageChannelId?: string;
 };
 

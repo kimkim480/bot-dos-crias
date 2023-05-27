@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import * as process from 'process';
 import { Guild } from '../types';
 import { logger } from './tools';
 
@@ -9,7 +8,6 @@ const schema = new mongoose.Schema({
   guildId: { type: String, required: true },
   gptChannelId: { type: String },
   gpt4ChannelId: { type: String },
-  spoilerChannelId: { type: String },
   imageChannelId: { type: String },
 });
 
