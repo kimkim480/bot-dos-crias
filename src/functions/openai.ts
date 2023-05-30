@@ -9,7 +9,8 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
-export async function callChatGPT(message: Message, isGPT3: boolean) {
+// TODO: Adicionar comando para configurar o `splitMessage`
+export async function callChatGPT(message: Message, isGPT3: boolean, splitMessage = false) {
   await message.channel.sendTyping();
   await message.channel.send({
     content: 'Bot dos Crias está processando sua mensagem',
@@ -59,6 +60,13 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
     });
 
     const content = completion.data.choices[0].message?.content;
+
+    if (!content) {
+      return await message.reply({
+        content: 'Algo deu errado',
+      });
+    }
+
     const billing = isGPT3
       ? ((completion.data.usage?.total_tokens || 0) * 0.002) / 1000
       : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) /
@@ -77,21 +85,31 @@ export async function callChatGPT(message: Message, isGPT3: boolean) {
 
     if (match) {
       const value = match[1];
-      file = new AttachmentBuilder(Buffer.from(content || ''), { name: `message.${value}` });
+      file = new AttachmentBuilder(Buffer.from(content), { name: `message.${value}` });
     }
 
-    const contentArray = splitString(content || '');
+    if (splitMessage) {
+      const contentArray = splitString(content);
 
-    let lastMassage;
-    for (const item of contentArray) {
+      let lastMassage;
+      for (const item of contentArray) {
+        await message.channel.sendTyping();
+        lastMassage = await message.reply({
+          content: item,
+        });
+      }
+
+      if (lastMassage) {
+        file && lastMassage.edit({ files: [file] });
+      }
+    } else {
+      const newFile = new AttachmentBuilder(Buffer.from(content), { name: `message-${new Date().toISOString()}.md` });
+      const files = file ? [newFile, file] : [newFile];
+
       await message.channel.sendTyping();
-      lastMassage = await message.reply({
-        content: item,
+      await message.reply({
+        files,
       });
-    }
-
-    if (lastMassage) {
-      file && lastMassage.edit({ files: [file] });
     }
 
     return;
