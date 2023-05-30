@@ -103,13 +103,20 @@ export async function callChatGPT(message: Message, isGPT3: boolean, splitMessag
         file && lastMassage.edit({ files: [file] });
       }
     } else {
-      const newFile = new AttachmentBuilder(Buffer.from(content), { name: `message-${new Date().toISOString()}.md` });
-      const files = file ? [newFile, file] : [newFile];
+      if (content.length <= 2000) {
+        await message.reply({
+          content,
+          files: file && [file],
+        });
+      } else {
+        const newFile = new AttachmentBuilder(Buffer.from(content), { name: `message-${new Date().toISOString()}.md` });
+        const files = file ? [newFile, file] : [newFile];
 
-      await message.channel.sendTyping();
-      await message.reply({
-        files,
-      });
+        await message.channel.sendTyping();
+        await message.reply({
+          files,
+        });
+      }
     }
 
     return;
