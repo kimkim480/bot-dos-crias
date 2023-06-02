@@ -1,6 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { AttachmentBuilder, Message, MessageCreateOptions } from 'discord.js';
-import { getAnexo, logger, splitString } from '../utils/tools';
+import { getAnexo, getBilling, logger, splitString } from '../utils/tools';
 
 const { OPENAI_API_KEY = '' } = process.env;
 
@@ -17,11 +17,12 @@ export async function callChatGPT(message: Message, isGPT3: boolean, splitMessag
   });
 
   try {
+    const userMessage = message;
     const model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
-    const max_tokens = isGPT3 ? 3000 : 1000;
+    const maxTokens = isGPT3 ? 3000 : 1000;
     const temperature = 0.2;
 
-    const system_prompt = `
+    const systemPrompt = `
     You are an assistant made for the purpose of helping user with code.
     You can answer about any subject that the user asks, but your mainly goal is answer about code/programming.
     
@@ -48,29 +49,36 @@ export async function callChatGPT(message: Message, isGPT3: boolean, splitMessag
       attachmentContent = await getAnexo(url);
     }
 
-    await message.channel.sendTyping();
     const completion = await openai.createChatCompletion({
-      max_tokens,
+      max_tokens: maxTokens,
       messages: [
-        { role: 'system', content: system_prompt },
-        { role: 'user', content: `${message.content}\n${attachmentContent}` },
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `${message.content}\n${attachmentContent}`,
+          name: message.author.username
+            .split(' ')[0]
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''),
+        },
       ],
       model,
       temperature,
     });
 
-    const content = completion.data.choices[0].message?.content;
+    const completionResponse = completion.data.choices[0].message?.content;
 
-    if (!content) {
-      return await message.reply({
+    if (!completionResponse) {
+      return message.reply({
         content: 'Algo deu errado',
       });
     }
 
-    const billing = isGPT3
-      ? ((completion.data.usage?.total_tokens || 0) * 0.002) / 1000
-      : ((completion.data.usage?.prompt_tokens || 0) * 0.03 + (completion.data.usage?.completion_tokens || 0) * 0.06) /
-        1000;
+    const billing = getBilling(isGPT3, {
+      promptTokens: completion.data.usage?.prompt_tokens || 0,
+      completionTokens: completion.data.usage?.completion_tokens || 0,
+      totalTokens: completion.data.usage?.total_tokens || 0,
+    });
 
     await logger(
       `Model: \n${model}\n\n Max_tokens: \n${completion.data.usage?.total_tokens}\n\n Billing: \n${billing}\n\n`,
@@ -80,43 +88,60 @@ export async function callChatGPT(message: Message, isGPT3: boolean, splitMessag
       }
     );
 
-    const match = message.content.match(/--save=([^ ]+)/);
-    let file;
-
-    if (match) {
-      const value = match[1];
-      file = new AttachmentBuilder(Buffer.from(content), { name: `message.${value}` });
-    }
-
+    let lastMessage;
     if (splitMessage) {
-      const contentArray = splitString(content);
+      const contentArray = splitString(completionResponse);
 
-      let lastMassage;
       for (const item of contentArray) {
         await message.channel.sendTyping();
-        lastMassage = await message.reply({
+        lastMessage = await message.reply({
           content: item,
         });
       }
-
-      if (lastMassage) {
-        file && lastMassage.edit({ files: [file] });
-      }
     } else {
-      if (content.length <= 2000) {
-        await message.reply({
-          content,
-          files: file && [file],
+      // 2000 is the Discord max characters
+      if (completionResponse.length <= 2000) {
+        await message.channel.sendTyping();
+        lastMessage = await message.reply({
+          content: completionResponse,
         });
       } else {
-        const newFile = new AttachmentBuilder(Buffer.from(content), { name: `message-${new Date().toISOString()}.md` });
-        const files = file ? [newFile, file] : [newFile];
+        const newFile = new AttachmentBuilder(Buffer.from(completionResponse), {
+          name: `message-${new Date().toISOString()}.md`,
+        });
 
         await message.channel.sendTyping();
-        await message.reply({
-          files,
+        lastMessage = await message.reply({
+          files: [newFile],
         });
       }
+    }
+
+    if (lastMessage) {
+      lastMessage.react('💾');
+      lastMessage.react('🔄');
+
+      const collector = lastMessage.createReactionCollector({ time: 300_000 });
+
+      collector.on('collect', async (reaction, user) => {
+        console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
+
+        if (user.bot) {
+          return;
+        }
+
+        if (reaction.emoji.name === '💾' && reaction.message.author?.bot) {
+          const newFile = new AttachmentBuilder(Buffer.from(completionResponse), {
+            name: `message-${new Date().toISOString()}.md`,
+          });
+          await user.send({ content: 'Aqui está seu arquivo!', files: [newFile] });
+        }
+
+        if (reaction.emoji.name === '🔄' && reaction.message.author?.bot) {
+          // If responses were always the same or similar then I should consider randomize temperature and pass it as a parameter
+          await callChatGPT(userMessage, isGPT3);
+        }
+      });
     }
 
     return;

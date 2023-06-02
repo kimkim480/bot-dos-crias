@@ -51,4 +51,15 @@ client.on('messageCreate', async message => {
   return;
 });
 
+// client.on('messageReactionAdd', async (reaction, user) => {
+//   console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
+//   if (user.bot) {
+//     return;
+//   }
+//
+//   if (reaction.emoji.name === '💾' && reaction.message.author?.bot) {
+//     await user.send('Opa');
+//   }
+// });
+
 client.login(BOT_TOKEN);

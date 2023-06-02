@@ -18,8 +18,14 @@ export interface ChannelHandler {
   handle(message: Message): Promise<void>;
 }
 
-export interface loggerOptions {
+export interface LoggerOptions {
   color?: number;
   footer?: string;
   title?: string;
+}
+
+export interface BillingOptions {
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
 }
