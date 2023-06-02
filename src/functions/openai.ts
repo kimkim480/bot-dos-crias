@@ -130,16 +130,22 @@ export async function callChatGPT(message: Message, isGPT3: boolean, splitMessag
           return;
         }
 
-        if (reaction.emoji.name === '💾' && reaction.message.author?.bot) {
+        if (reaction.emoji.name === '💾') {
           const newFile = new AttachmentBuilder(Buffer.from(completionResponse), {
             name: `message-${new Date().toISOString()}.md`,
           });
           await user.send({ content: 'Aqui está seu arquivo!', files: [newFile] });
         }
 
-        if (reaction.emoji.name === '🔄' && reaction.message.author?.bot) {
+        if (reaction.emoji.name === '🔄' && user.id === userMessage.author.id) {
           // If responses were always the same or similar then I should consider randomize temperature and pass it as a parameter
           await callChatGPT(userMessage, isGPT3);
+        }
+
+        if (reaction.emoji.name === '🔄' && user.id !== userMessage.author.id) {
+          await reaction.message.channel.send({
+            content: `${user} apenas o autor da mensagem pode gerar uma nova resposta`,
+          });
         }
       });
     }
