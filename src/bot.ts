@@ -1,55 +1,71 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-import { Client, GatewayIntentBits } from 'discord.js';
-import { init, mongoConnect } from './utils/mongodb';
+import { ActivityType, Client, Events, GatewayIntentBits } from 'discord.js';
+import { logger, mongoDB } from './utils';
 import { commands } from './commands';
 import { createChannelHandlers } from './handlers';
 import { GuildDocument } from './types';
-import { logger } from './utils/tools';
 
 const { BOT_TOKEN = '' } = process.env;
+export class Bot extends Client {
+  constructor() {
+    super({
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessages,
+      ],
+    });
 
-export const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessageReactions,
-  ],
-});
+    this.login(BOT_TOKEN);
 
-client.once('ready', async () => {
-  await mongoConnect();
-  await logger(`Bot is ready!`);
-});
+    this.once(Events.ClientReady, async () => {
+      await mongoDB.connect();
+      await logger(`Bot is ready!`);
 
-client.on('messageCreate', async message => {
-  const { author, channel, content, guildId } = message;
-  if (author.bot || !guildId) return;
-  const clientGuild = await init(guildId);
+      this.user?.setPresence({
+        activities: [{ name: `Bot dos Crias`, type: ActivityType.Playing }],
+        status: 'dnd',
+      });
+    });
 
-  const [cmd, args] = content.split(' ');
+    this.on(Events.Warn, info => logger(info));
+    this.on(Events.Error, error => logger(error.message));
 
-  const commandName = cmd;
-  const subCommand = args;
-
-  const command = commands[commandName];
-
-  if (command) {
-    const channelId = subCommand === 'start' ? channel.id : '';
-    await command.execute(clientGuild.id, channelId);
-    return;
+    this.onMessageCreate();
   }
 
-  const channelHandler = createChannelHandlers(clientGuild as Required<GuildDocument>)[channel.id];
+  private onMessageCreate() {
+    this.on(Events.MessageCreate, async message => {
+      const { author, channel, content, guildId } = message;
 
-  if (channelHandler) {
-    await channelHandler.handle(message);
+      if (author.bot || !guildId) return;
+
+      const clientGuild = await mongoDB.getClientGuild(guildId);
+
+      const [cmd, args] = content.split(' ');
+
+      const commandName = cmd;
+      const subCommand = args;
+
+      const command = commands[commandName];
+
+      if (command) {
+        const channelId = subCommand === 'start' ? channel.id : '';
+        await command.execute(clientGuild.id, channelId);
+        return;
+      }
+
+      const channelHandler = createChannelHandlers(clientGuild as Required<GuildDocument>, message)[channel.id];
+
+      if (channelHandler) {
+        await channelHandler.handle();
+      }
+
+      return;
+    });
   }
-
-  return;
-});
+}
 
 // client.on('messageReactionAdd', async (reaction, user) => {
 //   console.log(`Collected ${reaction.emoji.name} from ${user.tag}`);
@@ -61,5 +77,3 @@ client.on('messageCreate', async message => {
 //     await user.send('Opa');
 //   }
 // });
-
-client.login(BOT_TOKEN);
