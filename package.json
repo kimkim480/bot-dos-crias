@@ -1,7 +1,7 @@
 {
   "name": "bot-discord",
   "version": "1.0.0",
-  "main": "dist/src/bot.js",
+  "main": "dist/src/index.js",
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^1.7.1",
@@ -27,8 +27,8 @@
     "typescript": "^5.0.4"
   },
   "scripts": {
-    "start": "node dist/src/bot.js",
+    "start": "node dist/src/index.js",
     "build": "tsc -p tsconfig.json",
-    "dev": "ts-node-dev -r tsconfig-paths/register --inspect --transpile-only --ignore-watch node_modules --exit-child --respawn src/bot.ts"
+    "dev": "ts-node-dev -r tsconfig-paths/register --inspect --transpile-only --ignore-watch node_modules --exit-child --respawn src/index.ts"
   }
 }
