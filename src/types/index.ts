@@ -1,4 +1,3 @@
-import { Message } from 'discord.js';
 import { HydratedDocument } from 'mongoose';
 
 export type Guild = {
@@ -15,7 +14,7 @@ export interface Command {
 }
 
 export interface ChannelHandler {
-  handle(message: Message): Promise<void>;
+  handle(): Promise<void>;
 }
 
 export interface LoggerOptions {

@@ -29,9 +29,9 @@ export async function logger(message: string, options?: LoggerOptions) {
     year: 'numeric',
   });
 
-  return IS_DEV === 'true'
+  IS_DEV === 'true'
     ? console.log(message)
-    : webHook.send({
+    : await webHook.send({
         embeds: [
           {
             color: color || 0x206694,

@@ -1,5 +1,5 @@
-import { update } from '../utils/mongodb';
 import { Command } from '../types';
+import { mongoDB } from '../utils';
 
 export class ChatCommand implements Command {
   private readonly isGPT3: boolean;
@@ -8,11 +8,11 @@ export class ChatCommand implements Command {
   }
   async execute(guildId: string, channelId: string): Promise<void> {
     if (this.isGPT3) {
-      await update(guildId, {
+      await mongoDB.update(guildId, {
         gptChannelId: channelId,
       });
     } else {
-      await update(guildId, {
+      await mongoDB.update(guildId, {
         gpt4ChannelId: channelId,
       });
     }
