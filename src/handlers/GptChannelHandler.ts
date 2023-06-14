@@ -15,7 +15,7 @@ export class GptChannelHandler implements ChannelHandler {
   constructor(isGPT3: boolean, message: Message) {
     this.isGPT3 = isGPT3;
 
-    this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
+    this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-3.5-turbo-16k';
 
     this.maxTokens = isGPT3 ? 3000 : 1000;
 

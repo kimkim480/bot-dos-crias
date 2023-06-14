@@ -25,7 +25,7 @@ export class Bot extends Client {
 
       this.user?.setPresence({
         activities: [{ name: `Bot dos Crias`, type: ActivityType.Playing }],
-        status: 'dnd',
+        status: 'online',
       });
     });
 
