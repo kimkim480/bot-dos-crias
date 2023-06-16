@@ -17,7 +17,7 @@ export class GptChannelHandler implements ChannelHandler {
 
     this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-3.5-turbo-16k';
 
-    this.maxTokens = isGPT3 ? 3000 : 6000;
+    this.maxTokens = isGPT3 ? 3000 : 16000;
 
     this.openAI = new OpenAIApi(
       new Configuration({
