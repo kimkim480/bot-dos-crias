@@ -7,7 +7,7 @@ const { OPENAI_API_KEY = '' } = process.env;
 
 export class GptChannelHandler implements ChannelHandler {
   private readonly isGPT3: boolean; // TODO: This is only needed for now because of the getBilling function
-  private readonly maxTokens: number;
+  // private readonly maxTokens: number;
   private readonly model: string;
   private readonly openAI;
   private readonly userMessage: Message;
@@ -17,7 +17,7 @@ export class GptChannelHandler implements ChannelHandler {
 
     this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-3.5-turbo-16k';
 
-    this.maxTokens = isGPT3 ? 4096 : 16384;
+    // this.maxTokens = isGPT3 ? 4096 : 16384;
 
     this.openAI = new OpenAIApi(
       new Configuration({
@@ -70,7 +70,7 @@ export class GptChannelHandler implements ChannelHandler {
       }
 
       const completion = await this.openAI.createChatCompletion({
-        max_tokens: this.maxTokens,
+        // max_tokens: this.maxTokens,
         messages: [
           { role: 'system', content: systemPrompt },
           {
