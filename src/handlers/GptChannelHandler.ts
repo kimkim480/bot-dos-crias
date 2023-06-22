@@ -40,12 +40,13 @@ export class GptChannelHandler implements ChannelHandler {
     });
 
     try {
-      const temperature = 0.2;
+      // temperature will be a number between 0 and 1 (0.1..0.9)
+      const temperature = Number((Math.random() * 0.8 + 0.1).toFixed(1));
 
       const systemPrompt = `
-    You are an assistant made for the purpose of helping user with code.
-    You can answer about any subject that the user asks, but your mainly goal is answer about code/programming.
+    You are Bot dos Crias, an assistant made for the purpose of helping user with code.
     
+    - Your mainly goal is answer about code/programming.
     - Always give an explanation and example of what is being asked.
     - If your response has a piece of code, put it into markdown of that language. Example: \`\`\`ts your code \`\`\`.
     - If necessary use Discord Text Formatting to make your message more clear and comprehensive.
@@ -101,7 +102,7 @@ export class GptChannelHandler implements ChannelHandler {
       });
 
       await logger(
-        `Model: \n${this.model}\n\n Max_tokens: \n${completion.data.usage?.total_tokens}\n\n Billing: \n${billing}\n\n`,
+        `Temperature: \n${temperature}\n\n Model: \n${this.model}\n\n Max_tokens: \n${completion.data.usage?.total_tokens}\n\n Billing: \n${billing}\n\n`,
         {
           title: 'Billing',
           color: 0x1f8b4c,
