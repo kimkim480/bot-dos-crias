@@ -6,5 +6,4 @@ auth.js
 index.html
 dist
 images
-
-src/functions/playSong-backup.js
+.idea

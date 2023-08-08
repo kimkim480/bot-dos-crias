@@ -15,14 +15,14 @@ export class GptChannelHandler implements ChannelHandler {
   constructor(isGPT3: boolean, message: Message) {
     this.isGPT3 = isGPT3;
 
-    this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-3.5-turbo-16k';
+    this.model = isGPT3 ? 'gpt-3.5-turbo' : 'gpt-4';
 
     // this.maxTokens = isGPT3 ? 4096 : 16384;
 
     this.openAI = new OpenAIApi(
       new Configuration({
         apiKey: OPENAI_API_KEY,
-      })
+      }),
     );
 
     this.userMessage = message;
@@ -106,7 +106,7 @@ export class GptChannelHandler implements ChannelHandler {
         {
           title: 'Billing',
           color: 0x1f8b4c,
-        }
+        },
       );
 
       let lastMessage;
