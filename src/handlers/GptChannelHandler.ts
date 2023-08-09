@@ -1,6 +1,6 @@
 import { ChannelHandler } from '../types';
 import { AttachmentBuilder, Message } from 'discord.js';
-import { getAnexo, getBilling, logger, splitString } from '../utils';
+import { getAttachment, getBilling, logger, splitString } from '../utils';
 import { Configuration, OpenAIApi } from 'openai';
 
 const { OPENAI_API_KEY = '' } = process.env;
@@ -67,7 +67,7 @@ export class GptChannelHandler implements ChannelHandler {
           return;
         }
 
-        attachmentContent = await getAnexo(url);
+        attachmentContent = await getAttachment(url);
       }
 
       const completion = await this.openAI.createChatCompletion({

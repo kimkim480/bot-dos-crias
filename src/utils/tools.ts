@@ -11,8 +11,8 @@ export function splitString(str: string) {
 
 export function getBilling(isGPT3: boolean, data: BillingOptions) {
   return isGPT3
-    ? (data.totalTokens * 0.0015) / 1000
-    : (data.promptTokens * 0.003 + data.completionTokens * 0.004) / 1000;
+    ? (data.promptTokens * 0.0015 + data.completionTokens * 0.002) / 1000
+    : (data.promptTokens * 0.03 + data.completionTokens * 0.06) / 1000;
 }
 
 export async function logger(message: string, options?: LoggerOptions) {
@@ -45,7 +45,7 @@ export async function logger(message: string, options?: LoggerOptions) {
       });
 }
 
-export async function getAnexo(url: string) {
+export async function getAttachment(url: string) {
   const { data } = await axios<string>({
     method: 'get',
     url: url,
